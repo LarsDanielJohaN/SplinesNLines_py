@@ -21,9 +21,11 @@ def get_mat_comp(X_a, Tf_a, T_a, idx_down, idx_up):
     B = X_a[0].shape[1]
     XtXf = torch.zeros((O, B)).float()
     XtTX = torch.zeros((O, B, B)).float()
+
     for o in range(O):
         XtXf[o, :] = X_a[o].T@(Tf_a[idx_down[o]:idx_up[o]+1]).squeeze()
         XtTX[o, :, :] = X_a[o].T@torch.diag(T_a[idx_down[o]:idx_up[o]+1])@X_a[o]
+
     return {'XtXf':XtXf, 'XtTX':XtTX}
 
 
@@ -37,7 +39,7 @@ def get_mat_comp(X_a, f_a, T_a):
         XtTX[o, :, :] = X_a[o].T@T_a[o]@X_a[o]
     return {'XtXf':XtXf, 'XtTX':XtTX}
 
-
+"""
 
 def EM_alg(XtXf, XtTX, n_max, tol ):
     B = XtTX.shape[1]
@@ -78,7 +80,7 @@ def EM_alg(XtXf, XtTX, n_max, tol ):
         i+= 1
     return {'mu_h':mu_n, 'S_h':S_n, 'm0':m0, 'Si_h':Si}
 
-
+"""
 
 """
 x_e: numpy array of values to evaluate. 
@@ -239,25 +241,11 @@ def EM_alg(XtXf, XtTX, n_max, tol ):
         if i % 1000 == 0:
             print("Iteration:  ", i)
 
-        #print("iTERATION ",i)
-
-        #print("mu  ", mu.max())
-        #print("S   ", S.max())
         Si = LA.inv(S) #Calculates inverse of current iteration for variance covariance. 
-        #print("Si  ",Si.max())
-        
         C0 = LA.inv(Si + XtTX) #Calculates C0's = inv(Si + XtXT), I hope (O, B, B)
-        #print("C0",  C0.max())
         f = (Si.float()@mu.float()).squeeze(-1)
-        #print("f  ",f.max())
         m0 = torch.bmm(C0, (XtXf + f).unsqueeze(-1)).squeeze(-1)
-        #print("m0  ", m0.max())
         m0_outer = torch.bmm(m0.unsqueeze(-1), m0.unsqueeze(-2))
-
-        #for o in range(O): #Gets the outer product of individual mean estimates. 
-        #    m0[o,:] = C0[o, :, :]@(XtXf[o,:] + f)
-        #    m0_outer[o,:,:] = m0[o,:]@m0[o,:].T #Gets inner product of the o-th mean estimate.
-
         mu_n = torch.mean(m0, 0).reshape(-1,1) #Gets new mean estimate. 
         S_n = torch.mean(C0 + m0_outer, axis = 0) - mu_n@mu_n.T #Gets new iteration for S_n
         diff_S = LA.matrix_norm(S_n - S) #Computes matrix norm of current iteration and previous one. 
@@ -265,6 +253,7 @@ def EM_alg(XtXf, XtTX, n_max, tol ):
         mu = mu_n
         S = S_n 
         i+= 1
+
     return {'mu_h':mu_n, 'S_h':S_n, 'm0':m0, 'Si_h':Si}
 
 
