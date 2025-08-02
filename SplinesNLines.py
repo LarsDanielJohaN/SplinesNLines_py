@@ -223,12 +223,17 @@ def get_basis_mat_Splines(x_e, m, T):
 
 
 
-def EM_alg(XtXf, XtTX, n_max, tol ):
+def EM_alg(XtXf, XtTX, n_max, tol):
     B = XtTX.shape[1]
     O = XtXf.shape[0]
+
+    
     L = np.random.normal(size = B).reshape(-1,1)
     S =  torch.from_numpy(10*L@L.T + np.eye(B) ) #Gets first estimate for S
+    
     mu = torch.from_numpy(np.random.uniform(10, 100, size = B).reshape(-1,1) )#Gets first estimate for mu. 
+
+        
     m0 = torch.zeros(O, B)
     XtTX = torch.from_numpy(XtTX) #Converts XtTX to a torch tensor. 
     XtXf = torch.from_numpy(XtXf)
